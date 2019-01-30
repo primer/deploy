@@ -7,6 +7,9 @@
     "lint": "eslint src",
     "test": "jest"
   },
+  "jest": {
+    "testPathIgnorePatterns": [".eslintrc.js"]
+  },
   "dependencies": {
     "commit-status": "^4.3.0",
     "execa": "^1.0.0",
