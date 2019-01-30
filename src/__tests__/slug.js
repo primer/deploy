@@ -7,4 +7,7 @@ describe('slug', () => {
   it('preserves "primer-primitives"', () => {
     expect(slug('primer-primitives')).toEqual('primer-primitives')
   })
+  it('replaces slashes and underscores', () => {
+    expect(slug('jonrohan/do_stuff')).toEqual('jonrohan-do-stuff')
+  })
 })

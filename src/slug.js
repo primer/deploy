@@ -5,6 +5,6 @@ module.exports = function slug(str) {
       // strip all leading invalid chars
       .replace(/^\W+/, '')
       // replace any sequence of invalid chars with a hyphen
-      .replace(/[^-\w]+/g, '-')
+      .replace(/[^-a-z0-9]+/g, '-')
   )
 }
