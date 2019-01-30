@@ -21,7 +21,7 @@ action "deploy" {
 }
 ```
 
-**You will need to provide a value for the `NOW_TOKEN` secret in the Actions visual editor** with a [Zeit token](https://zeit.co/account/tokens).
+**You will need to provide a [Zeit token](https://zeit.co/account/tokens) value for the `NOW_TOKEN` secret in the Actions visual editor** if you haven't already set one up.
 
 To avoid racking up failed deployments, we suggest that you place this action after any linting and test actions.
 
