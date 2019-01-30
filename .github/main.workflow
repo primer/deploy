@@ -21,6 +21,7 @@ action "test" {
 }
 
 action "deploy" {
+  needs = ["test"]
   uses = "./"
   secrets = [
     "GITHUB_TOKEN",
