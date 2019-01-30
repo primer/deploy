@@ -10,7 +10,9 @@
     "test": "jest"
   },
   "jest": {
-    "testPathIgnorePatterns": [".eslintrc.js"]
+    "testPathIgnorePatterns": [
+      ".eslintrc.js"
+    ]
   },
   "dependencies": {
     "commit-status": "^4.3.0",
@@ -22,5 +24,6 @@
     "eslint-plugin-github": "^1.8.1",
     "jest": "^24.0.0",
     "mocked-env": "^1.2.4"
-  }
+  },
+  "version": "1.0.0"
 }
