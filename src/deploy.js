@@ -10,8 +10,12 @@ module.exports = function deploy(args) {
   console.log(`[deploy] deploying "${name}" with now...`)
   return now(args)
     .then(url => {
-      console.log(`[deploy] deployed to: ${url}`)
-      return {name, root: url, url}
+      if (url) {
+        console.log(`[deploy] deployed to: ${url}`)
+        return {name, root: url, url}
+      } else {
+        throw new Error(`Unable to get deployment URL from now: ${url}`)
+      }
     })
     .then(res => {
       const {url} = res
