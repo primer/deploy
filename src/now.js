@@ -5,5 +5,6 @@ module.exports = function now(args = []) {
   if (!NOW_TOKEN) {
     throw new Error(`The NOW_TOKEN env var is required`)
   }
-  return execa('npx', ['now', `--token=${NOW_TOKEN}`, ...args], {stderr: 'inherit'}).then(res => res.stdout)
+  const nowArgs = ['now', `--token=${NOW_TOKEN}`, ...args]
+  return execa('npx', nowArgs, {stderr: 'inherit'}).then(res => res.stdout)
 }
