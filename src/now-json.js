@@ -1,2 +1,4 @@
+const fs = require('fs')
 const {join} = require('path')
-module.exports = require(join(process.cwd(), 'now.json'))
+const nowPath = join(process.cwd(), 'now.json')
+module.exports = fs.existsSync(nowPath) ? require(nowPath) : {}

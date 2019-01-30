@@ -3,7 +3,7 @@ const now = require('./now')
 const getAlias = require('./get-alias')
 const commitStatus = require('./commit-status')
 
-module.exports = function deploy(...args) {
+module.exports = function deploy(args) {
   const nowJson = require('./now-json')
   const packageJson = require('./package-json')
   const name = nowJson.name || packageJson.name || dirname(process.cwd())
