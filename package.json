@@ -1,6 +1,8 @@
 {
-  "private": true,
   "name": "@primer/deploy",
+  "bin": {
+    "primer-deploy": "entrypoint.js"
+  },
   "scripts": {
     "lint": "eslint src",
     "test": "jest"

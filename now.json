@@ -1,0 +1,6 @@
+{
+  "name": "primer-deploy",
+  "alias": "primer-deploy.now.sh",
+  "type": "static",
+  "files": ["index.html"]
+}
