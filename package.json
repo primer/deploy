@@ -1,5 +1,7 @@
 {
   "name": "@primer/deploy",
+  "author": "GitHub, Inc.",
+  "license": "MIT",
   "bin": {
     "primer-deploy": "entrypoint.js"
   },
