@@ -1,5 +1,4 @@
-const fs = require('fs')
-const {dirname, join} = require('path')
+const {dirname} = require('path')
 const commitStatus = require('./commit-status')
 const getAlias = require('./get-alias')
 const now = require('./now')
@@ -40,8 +39,7 @@ module.exports = function deploy(args = []) {
                 return res
               }
               res.url = prodAlias
-              return now(['alias', ...args, alias, prodAlias, '-r', 'rules.json'])
-                .then(() => commitStatus(prodAlias))
+              return now(['alias', ...args, alias, prodAlias, '-r', 'rules.json']).then(() => commitStatus(prodAlias))
             }
           })
           .then(() => res)

@@ -3,12 +3,7 @@ const mockedEnv = require('mocked-env')
 const now = require('../now')
 
 jest.mock('execa')
-execa.mockImplementation((cmd, args, opts) =>
-  Promise.resolve({
-    stderr: '',
-    stdout: ''
-  })
-)
+execa.mockImplementation(() => Promise.resolve({stderr: '', stdout: ''}))
 
 describe('now()', () => {
   let restoreEnv = () => {}

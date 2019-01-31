@@ -1,4 +1,3 @@
-const execa = require('execa')
 const mockedEnv = require('mocked-env')
 const readJSON = require('../read-json')
 const deploy = require('../deploy')
@@ -29,7 +28,7 @@ describe('deploy()', () => {
     })
 
     const url = 'foo-123.now.sh'
-    now.mockImplementation((cmd, args, opts) => Promise.resolve(url))
+    now.mockImplementation(() => Promise.resolve(url))
     mockEnv({GITHUB_REF: ''})
 
     return deploy().then(res => {
@@ -48,7 +47,7 @@ describe('deploy()', () => {
 
     const url = 'foo-123.now.sh'
     const alias = 'foo-bar.now.sh'
-    now.mockImplementation((cmd, args, opts) => Promise.resolve(url))
+    now.mockImplementation(() => Promise.resolve(url))
     mockEnv({GITHUB_REF: 'refs/heads/bar'})
 
     return deploy().then(res => {
@@ -70,7 +69,7 @@ describe('deploy()', () => {
 
     const url = 'foo-123.now.sh'
     const alias = 'foo-bar.now.sh'
-    now.mockImplementation((cmd, args, opts) => Promise.resolve(url))
+    now.mockImplementation(() => Promise.resolve(url))
     mockEnv({GITHUB_REF: 'refs/heads/bar'})
 
     return deploy().then(res => {
