@@ -2,7 +2,7 @@
 const {dirname, join} = require('path')
 const deploy = require('./src/deploy')
 
-const args = process.argv.slice(2)
+const args = process.argv.slice(3)
 
 deploy(...args)
   .then(res => {
