@@ -7,4 +7,10 @@ describe('getBranch()', () => {
     expect(getBranch()).toEqual('foo')
     restore()
   })
+
+  it('returns an empty string if GITHUB_REF is unset', () => {
+    const restore = mockedEnv({GITHUB_REF: undefined})
+    expect(getBranch()).toEqual('')
+    restore()
+  })
 })
