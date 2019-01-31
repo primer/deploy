@@ -5,7 +5,7 @@ const getBranchAlias = require('./get-alias')
 const now = require('./now')
 const readJSON = require('./read-json')
 
-module.exports = function deploy() {
+module.exports = function deploy(...nowArgs) {
   const nowJson = readJSON('now.json') || {}
   const packageJson = readJSON('package.json') || {}
   const rulesJson = readJSON('rules.json')
@@ -14,7 +14,7 @@ module.exports = function deploy() {
   const branch = getBranch(name)
 
   console.log(`[deploy] deploying "${name}" with now...`)
-  return now()
+  return now(nowArgs)
     .then(url => {
       if (url) {
         // console.log(`[deploy] deployed to: ${url}`)
@@ -32,14 +32,14 @@ module.exports = function deploy() {
       const prodAlias = nowJson.alias
       if (branch === 'master' && !rulesJson) {
         res.url = prodAlias
-        return now(['alias', url, prodAlias])
+        return now([...nowArgs, 'alias', url, prodAlias])
           .then(() => commitStatus(prodAlias))
           .then(() => res)
       }
       const branchAlias = getBranchAlias(name, branch)
       if (branchAlias) {
         res.url = res.alias = branchAlias
-        return now(['alias', url, branchAlias])
+        return now([...nowArgs, 'alias', url, branchAlias])
           .then(() => commitStatus(branchAlias))
           .then(() => {
             if (branch === 'master' && rulesJson) {
@@ -52,7 +52,7 @@ module.exports = function deploy() {
                 return res
               }
               res.url = prodAlias
-              return now(['alias', alias, prodAlias, '-r', 'rules.json']).then(() => commitStatus(prodAlias))
+              return now([...nowArgs, 'alias', alias, prodAlias, '-r', 'rules.json']).then(() => commitStatus(prodAlias))
             }
           })
           .then(() => res)

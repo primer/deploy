@@ -20,21 +20,21 @@ describe('deploy()', () => {
     readJSON.mockReset()
   })
 
-  it('calls now() once when w/o an alias', () => {
+  it('calls now() once when GITHUB_REF is unset', () => {
     mockFiles({
       'package.json': {name: 'foo'},
       'now.json': {},
       'rules.json': null
     })
 
-    const url = 'foo-123.now.sh'
-    now.mockImplementation(() => Promise.resolve(url))
+    const root = 'foo-123.now.sh'
+    now.mockImplementation(() => Promise.resolve(root))
     mockEnv({GITHUB_REF: ''})
 
     return deploy().then(res => {
       expect(now).toHaveBeenCalledTimes(1)
-      expect(now).toHaveBeenCalledWith()
-      expect(res).toEqual({name: 'foo', root: url, url})
+      expect(now).toHaveBeenCalledWith([])
+      expect(res).toEqual({name: 'foo', root, url: root})
     })
   })
 
@@ -45,16 +45,16 @@ describe('deploy()', () => {
       'rules.json': null
     })
 
-    const url = 'foo-123.now.sh'
+    const root = 'foo-123.now.sh'
     const alias = 'foo-bar.now.sh'
-    now.mockImplementation(() => Promise.resolve(url))
+    now.mockImplementation(() => Promise.resolve(root))
     mockEnv({GITHUB_REF: 'refs/heads/bar'})
 
     return deploy().then(res => {
       expect(now).toHaveBeenCalledTimes(2)
-      expect(now).toHaveBeenNthCalledWith(1)
-      expect(now).toHaveBeenNthCalledWith(2, ['alias', url, alias])
-      expect(res).toEqual({name: 'foo', root: url, alias, url: alias})
+      expect(now).toHaveBeenNthCalledWith(1, [])
+      expect(now).toHaveBeenNthCalledWith(2, ['alias', root, alias])
+      expect(res).toEqual({name: 'foo', root, alias, url: alias})
     })
   })
 
@@ -73,7 +73,7 @@ describe('deploy()', () => {
 
     return deploy().then(res => {
       expect(now).toHaveBeenCalledTimes(2)
-      expect(now).toHaveBeenNthCalledWith(1)
+      expect(now).toHaveBeenNthCalledWith(1, [])
       expect(now).toHaveBeenNthCalledWith(2, ['alias', root, alias])
       expect(res).toEqual({name, root, url: alias})
     })
@@ -88,16 +88,16 @@ describe('deploy()', () => {
       'rules.json': {}
     })
 
-    const url = 'foo-123.now.sh'
+    const root = 'foo-123.now.sh'
     const alias = 'foo-bar.now.sh'
-    now.mockImplementation(() => Promise.resolve(url))
+    now.mockImplementation(() => Promise.resolve(root))
     mockEnv({GITHUB_REF: 'refs/heads/bar'})
 
     return deploy().then(res => {
       expect(now).toHaveBeenCalledTimes(2)
-      expect(now).toHaveBeenNthCalledWith(1)
-      expect(now).toHaveBeenNthCalledWith(2, ['alias', url, alias])
-      expect(res).toEqual({name: 'foo', root: url, alias, url: alias})
+      expect(now).toHaveBeenNthCalledWith(1, [])
+      expect(now).toHaveBeenNthCalledWith(2, ['alias', root, alias])
+      expect(res).toEqual({name: 'foo', root, alias, url: alias})
     })
   })
 
@@ -110,17 +110,37 @@ describe('deploy()', () => {
       'rules.json': {}
     })
 
-    const url = 'primer-style-123.now.sh'
+    const root = 'primer-style-123.now.sh'
     const alias = 'primer-style.now.sh'
-    now.mockImplementation(() => Promise.resolve(url))
+    now.mockImplementation(() => Promise.resolve(root))
     mockEnv({GITHUB_REF: 'refs/heads/master'})
 
     return deploy().then(res => {
       expect(now).toHaveBeenCalledTimes(3)
-      expect(now).toHaveBeenNthCalledWith(1)
-      expect(now).toHaveBeenNthCalledWith(2, ['alias', url, alias])
+      expect(now).toHaveBeenNthCalledWith(1, [])
+      expect(now).toHaveBeenNthCalledWith(2, ['alias', root, alias])
       expect(now).toHaveBeenNthCalledWith(3, ['alias', alias, prodAlias, '-r', 'rules.json'])
-      expect(res).toEqual({name: 'primer-style', root: url, alias, url: prodAlias})
+      expect(res).toEqual({name: 'primer-style', root, alias, url: prodAlias})
+    })
+  })
+
+  it('appends arguments to the now cli call', () => {
+    mockFiles({
+      'package.json': {name: '@primer/css'},
+      'now.json': {alias: 'primer-css.now.sh'},
+      'rules.json': null
+    })
+
+    const root = 'primer-css-v12.now.sh'
+    const alias = 'primer-css-v12.now.sh'
+    now.mockImplementation(() => Promise.resolve(root))
+    mockEnv({GITHUB_REF: 'refs/heads/v12'})
+
+    return deploy('docs').then(res => {
+      expect(now).toHaveBeenCalledTimes(2)
+      expect(now).toHaveBeenNthCalledWith(1, ['docs'])
+      expect(now).toHaveBeenNthCalledWith(2, ['docs', 'alias', root, alias])
+      expect(res).toEqual({name: '@primer/css', root, alias, url: alias})
     })
   })
 
