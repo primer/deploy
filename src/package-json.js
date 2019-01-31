@@ -1,4 +1,4 @@
-const fs = require('fs')
-const path = require('path')
-const packagePath = path.join(process.cwd(), 'package.json')
-module.exports = fs.existsSync(packagePath) ? require(packagePath) : {}
+const {join} = require('path')
+const readJSON = require('./read-json')
+
+module.exports = readJSON(join(process.cwd(), 'package.json')) || {}
