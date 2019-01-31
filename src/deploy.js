@@ -1,26 +1,63 @@
 const {dirname} = require('path')
-const now = require('./now')
-const getAlias = require('./get-alias')
+const getBranch = require('./get-branch')
 const commitStatus = require('./commit-status')
+const getBranchAlias = require('./get-alias')
+const now = require('./now')
+const readJSON = require('./read-json')
 
-module.exports = function deploy(args) {
-  const nowJson = require('./now-json')
-  const packageJson = require('./package-json')
+module.exports = function deploy() {
+  const nowJson = readJSON('now.json') || {}
+  const packageJson = readJSON('package.json') || {}
+  const rulesJson = readJSON('rules.json')
+
   const name = nowJson.name || packageJson.name || dirname(process.cwd())
+  const branch = getBranch(name)
+
   console.log(`[deploy] deploying "${name}" with now...`)
-  return now(args)
+  return now()
     .then(url => {
-      console.log(`[deploy] deployed to: ${url}`)
-      return {name, root: url, url}
+      if (url) {
+        // console.log(`[deploy] deployed to: ${url}`)
+        return {
+          name,
+          root: url,
+          url
+        }
+      } else {
+        throw new Error(`Unable to get deployment URL from now: ${url}`)
+      }
     })
     .then(res => {
       const {url} = res
-      const alias = getAlias(name)
-      if (alias) {
-        res.url = alias
-        return now(['alias', ...args, url, alias])
-          .then(() => commitStatus(alias))
+      const prodAlias = nowJson.alias
+      if (branch === 'master' && !rulesJson) {
+        res.url = prodAlias
+        return now(['alias', url, prodAlias])
+          .then(() => commitStatus(prodAlias))
           .then(() => res)
+      }
+      const branchAlias = getBranchAlias(name, branch)
+      if (branchAlias) {
+        res.url = res.alias = branchAlias
+        return now(['alias', url, branchAlias])
+          .then(() => commitStatus(branchAlias))
+          .then(() => {
+            if (branch === 'master' && rulesJson) {
+              const {alias} = res
+              if (!prodAlias) {
+                console.warn(`[deploy] no alias field in now.json!`)
+                return res
+              } else if (prodAlias === alias) {
+                console.warn(`[deploy] already aliased to production URL: ${alias}; skipping rules.json`)
+                return res
+              }
+              res.url = prodAlias
+              return now(['alias', alias, prodAlias, '-r', 'rules.json']).then(() => commitStatus(prodAlias))
+            }
+          })
+          .then(() => res)
+      } else {
+        return res
       }
     })
 }

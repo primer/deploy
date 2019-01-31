@@ -1,9 +1,7 @@
-const getBranch = require('./get-branch')
 const slug = require('./slug')
 
-module.exports = function getAlias(name) {
+module.exports = function getAlias(name, branch) {
   const nameSlug = slug(name)
-  const branch = getBranch()
 
   if (branch === 'master') {
     return `${nameSlug}.now.sh`
