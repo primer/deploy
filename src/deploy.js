@@ -14,8 +14,8 @@ module.exports = function deploy(...nowArgs) {
   const branch = getBranch(name)
 
   console.log(`[deploy] deploying "${name}" with now...`)
+  console.log('⚠️⚠️⚠️⚠️ now args!', nowArgs)
   return now(nowArgs)
-    console.log('⚠️⚠️⚠️⚠️ now args!', nowArgs)
     .then(url => {
       if (url) {
         // console.log(`[deploy] deployed to: ${url}`)
