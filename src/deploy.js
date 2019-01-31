@@ -29,6 +29,13 @@ module.exports = function deploy() {
     })
     .then(res => {
       const {url} = res
+      const prodAlias = nowJson.alias
+      if (branch === 'master' && !rulesJson) {
+        res.url = prodAlias
+        return now(['alias', url, prodAlias])
+          .then(() => commitStatus(prodAlias))
+          .then(() => res)
+      }
       const branchAlias = getBranchAlias(name, branch)
       if (branchAlias) {
         res.url = res.alias = branchAlias
@@ -37,7 +44,6 @@ module.exports = function deploy() {
           .then(() => {
             if (branch === 'master' && rulesJson) {
               const {alias} = res
-              const prodAlias = nowJson.alias
               if (!prodAlias) {
                 console.warn(`[deploy] no alias field in now.json!`)
                 return res

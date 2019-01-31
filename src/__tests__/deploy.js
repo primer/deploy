@@ -38,7 +38,7 @@ describe('deploy()', () => {
     })
   })
 
-  it('calls now() twice when there is an alias', () => {
+  it('deploys to a branch alias on branches other than master', () => {
     mockFiles({
       'package.json': {name: 'foo'},
       'now.json': {},
@@ -55,6 +55,27 @@ describe('deploy()', () => {
       expect(now).toHaveBeenNthCalledWith(1)
       expect(now).toHaveBeenNthCalledWith(2, ['alias', url, alias])
       expect(res).toEqual({name: 'foo', root: url, alias, url: alias})
+    })
+  })
+
+  it('deploys to the "alias" field from now.json on the master branch', () => {
+    const name = 'hello'
+    const alias = 'hello.world'
+    mockFiles({
+      'package.json': {name},
+      'now.json': {alias},
+      'rules.json': null
+    })
+
+    const root = 'hello-123.now.sh'
+    now.mockImplementation(() => Promise.resolve(root))
+    mockEnv({GITHUB_REF: 'refs/heads/master'})
+
+    return deploy().then(res => {
+      expect(now).toHaveBeenCalledTimes(2)
+      expect(now).toHaveBeenNthCalledWith(1)
+      expect(now).toHaveBeenNthCalledWith(2, ['alias', root, alias])
+      expect(res).toEqual({name, root, url: alias})
     })
   })
 
