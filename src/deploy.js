@@ -15,6 +15,7 @@ module.exports = function deploy(...nowArgs) {
 
   console.log(`[deploy] deploying "${name}" with now...`)
   return now(nowArgs)
+    console.log('⚠️⚠️⚠️⚠️ now args!', nowArgs)
     .then(url => {
       if (url) {
         // console.log(`[deploy] deployed to: ${url}`)
