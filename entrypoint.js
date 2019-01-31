@@ -4,7 +4,7 @@ const deploy = require('./src/deploy')
 
 const args = process.argv.slice(2)
 
-deploy(args)
+deploy(...args)
   .then(res => {
     console.warn(`[deploy] deployed: ${JSON.stringify(res)}`)
   })
