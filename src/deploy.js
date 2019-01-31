@@ -14,11 +14,12 @@ module.exports = function deploy(...nowArgs) {
   const branch = getBranch(name)
 
   console.log(`[deploy] deploying "${name}" with now...`)
-  console.log('⚠️⚠️⚠️⚠️ now args!', nowArgs)
+  console.log('⚠️⚠️⚠️⚠️ now args!', nowArgs, ...nowArgs)
   return now(nowArgs)
     .then(url => {
       if (url) {
         // console.log(`[deploy] deployed to: ${url}`)
+        console.log('🙏🙏🙏 now args!', nowArgs, ...nowArgs)
         return {
           name,
           root: url,
