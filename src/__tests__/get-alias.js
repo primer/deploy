@@ -1,10 +1,7 @@
-const mockedEnv = require('mocked-env')
 const getAlias = require('../get-alias')
 
 describe('getAlias()', () => {
   it('works', () => {
-    const restore = mockedEnv({GITHUB_REF: 'refs/heads/add-foo'})
-    expect(getAlias('@primer/css')).toEqual('primer-css-add-foo.now.sh')
-    restore()
+    expect(getAlias('@primer/css', 'add-foo')).toEqual('primer-css-add-foo.now.sh')
   })
 })

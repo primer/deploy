@@ -1,34 +1,41 @@
 const {dirname} = require('path')
+const getBranch = require('./get-branch')
 const commitStatus = require('./commit-status')
-const getAlias = require('./get-alias')
+const getBranchAlias = require('./get-alias')
 const now = require('./now')
 const readJSON = require('./read-json')
 
-module.exports = function deploy(args = []) {
+module.exports = function deploy() {
   const nowJson = readJSON('now.json') || {}
   const packageJson = readJSON('package.json') || {}
   const rulesJson = readJSON('rules.json')
+
   const name = nowJson.name || packageJson.name || dirname(process.cwd())
+  const branch = getBranch(name)
 
   console.log(`[deploy] deploying "${name}" with now...`)
   return now()
     .then(url => {
       if (url) {
         // console.log(`[deploy] deployed to: ${url}`)
-        return {name, root: url, url}
+        return {
+          name,
+          root: url,
+          url
+        }
       } else {
         throw new Error(`Unable to get deployment URL from now: ${url}`)
       }
     })
     .then(res => {
       const {url} = res
-      const alias = getAlias(name)
-      if (alias) {
-        res.url = res.alias = alias
-        return now(['alias', ...args, url, alias])
-          .then(() => commitStatus(alias))
+      const branchAlias = getBranchAlias(name, branch)
+      if (branchAlias) {
+        res.url = res.alias = branchAlias
+        return now(['alias', url, branchAlias])
+          .then(() => commitStatus(branchAlias))
           .then(() => {
-            if (rulesJson) {
+            if (branch === 'master' && rulesJson) {
               const {alias} = res
               const prodAlias = nowJson.alias
               if (!prodAlias) {
@@ -39,7 +46,7 @@ module.exports = function deploy(args = []) {
                 return res
               }
               res.url = prodAlias
-              return now(['alias', ...args, alias, prodAlias, '-r', 'rules.json']).then(() => commitStatus(prodAlias))
+              return now(['alias', alias, prodAlias, '-r', 'rules.json']).then(() => commitStatus(prodAlias))
             }
           })
           .then(() => res)
