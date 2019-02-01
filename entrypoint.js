@@ -9,6 +9,6 @@ deploy(...args)
     console.warn(`[deploy] deployed: ${JSON.stringify(res)}`)
   })
   .catch(error => {
-    console.error(`[deploy] ERROR: ${error}`, '🙏 args:', args)
+    console.error(`[deploy] ERROR: ${error} 🙏 args: ${args}`)
     process.exitCode = 1
   })
