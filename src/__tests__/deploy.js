@@ -119,7 +119,7 @@ describe('deploy()', () => {
       expect(now).toHaveBeenCalledTimes(3)
       expect(now).toHaveBeenNthCalledWith(1, [])
       expect(now).toHaveBeenNthCalledWith(2, ['alias', root, alias])
-      expect(now).toHaveBeenNthCalledWith(3, ['alias', '-r', 'rules.json', alias, prodAlias])
+      expect(now).toHaveBeenNthCalledWith(3, ['alias', '-r', 'rules.json', prodAlias])
       expect(res).toEqual({name: 'primer-style', root, alias, url: prodAlias})
     })
   })

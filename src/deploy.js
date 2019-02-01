@@ -54,7 +54,7 @@ module.exports = function deploy(options = {}, nowArgs = []) {
                 return res
               }
               res.url = prodAlias
-              return now([...nowArgs, 'alias', '-r', 'rules.json', alias, prodAlias]).then(() =>
+              return now([...nowArgs, 'alias', '-r', 'rules.json', prodAlias]).then(() =>
                 commitStatus(prodAlias)
               )
             }
