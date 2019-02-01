@@ -2,10 +2,12 @@ const {dirname} = require('path')
 const getBranch = require('./get-branch')
 const commitStatus = require('./commit-status')
 const getBranchAlias = require('./get-alias')
-const now = require('./now')
 const readJSON = require('./read-json')
 
-module.exports = function deploy() {
+module.exports = function deploy(options = {}, nowArgs = []) {
+  const {dryRun} = options
+  const now = dryRun ? nowDryRun : require('./now')
+
   const nowJson = readJSON('now.json') || {}
   const packageJson = readJSON('package.json') || {}
   const rulesJson = readJSON('rules.json')
@@ -13,11 +15,11 @@ module.exports = function deploy() {
   const name = nowJson.name || packageJson.name || dirname(process.cwd())
   const branch = getBranch(name)
 
-  console.log(`[deploy] deploying "${name}" with now...`)
-  return now()
+  log(`deploying "${name}" with now...`)
+  return now(nowArgs)
     .then(url => {
       if (url) {
-        // console.log(`[deploy] deployed to: ${url}`)
+        log(`root deployment: ${url}`)
         return {
           name,
           root: url,
@@ -32,27 +34,27 @@ module.exports = function deploy() {
       const prodAlias = nowJson.alias
       if (branch === 'master' && !rulesJson) {
         res.url = prodAlias
-        return now(['alias', url, prodAlias])
+        return now([...nowArgs, 'alias', url, prodAlias])
           .then(() => commitStatus(prodAlias))
           .then(() => res)
       }
       const branchAlias = getBranchAlias(name, branch)
       if (branchAlias) {
         res.url = res.alias = branchAlias
-        return now(['alias', url, branchAlias])
+        return now([...nowArgs, 'alias', url, branchAlias])
           .then(() => commitStatus(branchAlias))
           .then(() => {
             if (branch === 'master' && rulesJson) {
               const {alias} = res
               if (!prodAlias) {
-                console.warn(`[deploy] no alias field in now.json!`)
+                log(`no alias field in now.json; skipping rules.json`)
                 return res
               } else if (prodAlias === alias) {
-                console.warn(`[deploy] already aliased to production URL: ${alias}; skipping rules.json`)
+                log(`already aliased to production URL: ${alias}; skipping rules.json`)
                 return res
               }
               res.url = prodAlias
-              return now(['alias', alias, prodAlias, '-r', 'rules.json']).then(() => commitStatus(prodAlias))
+              return now([...nowArgs, 'alias', '-r', 'rules.json', prodAlias]).then(() => commitStatus(prodAlias))
             }
           })
           .then(() => res)
@@ -60,4 +62,13 @@ module.exports = function deploy() {
         return res
       }
     })
+}
+
+function log(message, ...args) {
+  console.warn(`[deploy] ${message}`, ...args)
+}
+
+function nowDryRun(args) {
+  log(`RUN: npx now`, ...args)
+  return Promise.resolve('<deployed-url>')
 }
