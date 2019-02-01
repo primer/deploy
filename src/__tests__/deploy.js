@@ -136,7 +136,7 @@ describe('deploy()', () => {
     now.mockImplementation(() => Promise.resolve(root))
     mockEnv({GITHUB_REF: 'refs/heads/v12'})
 
-    return deploy('docs').then(res => {
+    return deploy({}, ['docs']).then(res => {
       expect(now).toHaveBeenCalledTimes(2)
       expect(now).toHaveBeenNthCalledWith(1, ['docs'])
       expect(now).toHaveBeenNthCalledWith(2, ['docs', 'alias', root, alias])

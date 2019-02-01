@@ -2,10 +2,12 @@ const {dirname} = require('path')
 const getBranch = require('./get-branch')
 const commitStatus = require('./commit-status')
 const getBranchAlias = require('./get-alias')
-const now = require('./now')
 const readJSON = require('./read-json')
 
-module.exports = function deploy(...nowArgs) {
+module.exports = function deploy(options = {}, nowArgs = []) {
+  const {dryRun} = options
+  const now = dryRun ? nowDryRun : require('./now')
+
   const nowJson = readJSON('now.json') || {}
   const packageJson = readJSON('package.json') || {}
   const rulesJson = readJSON('rules.json')
@@ -13,11 +15,11 @@ module.exports = function deploy(...nowArgs) {
   const name = nowJson.name || packageJson.name || dirname(process.cwd())
   const branch = getBranch(name)
 
-  console.log(`[deploy] deploying "${name}" with now...`)
+  log(`deploying "${name}" with now...`)
   return now(nowArgs)
     .then(url => {
       if (url) {
-        // console.log(`[deploy] deployed to: ${url}`)
+        log(`root deployment: ${url}`)
         return {
           name,
           root: url,
@@ -45,10 +47,10 @@ module.exports = function deploy(...nowArgs) {
             if (branch === 'master' && rulesJson) {
               const {alias} = res
               if (!prodAlias) {
-                console.warn(`[deploy] no alias field in now.json!`)
+                log(`no alias field in now.json; skipping rules.json`)
                 return res
               } else if (prodAlias === alias) {
-                console.warn(`[deploy] already aliased to production URL: ${alias}; skipping rules.json`)
+                log(`already aliased to production URL: ${alias}; skipping rules.json`)
                 return res
               }
               res.url = prodAlias
@@ -62,4 +64,13 @@ module.exports = function deploy(...nowArgs) {
         return res
       }
     })
+}
+
+function log(message, ...args) {
+  console.warn(`[deploy] ${message}`, ...args)
+}
+
+function nowDryRun(args) {
+  log(`RUN: npx now`, ...args)
+  return Promise.resolve('<deployed-url>')
 }
