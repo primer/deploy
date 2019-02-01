@@ -29,4 +29,19 @@ action "deploy" {
 
 To avoid racking up failed deployments, we suggest that you place this action after any linting and test actions.
 
+## Now CLI arguments
+It's possible to pass additional arguments through to the `now` CLI by passing them after a `--` in the positional arguments to the entrypoint (or, if you're running this from an npm installation, the `primer-deploy` CLI). However, due to a known issue with the `args` field in workflow files, you have to use `runs` like so:
+
+```diff
+action "deploy" {
+  uses = "primer/deploy@master"
+-  args = "-- --meta foo=bar"
++  runs = "/entrypoint.js -- --meta foo=bar"
+  secrets = [
+    "GITHUB_TOKEN",
+    "NOW_TOKEN",
+  ]
+}
+```
+
 [Now]: https://zeit.co/now
