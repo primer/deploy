@@ -39,7 +39,6 @@ deploy(argv, argv._)
   })
   .catch(error => {
     console.error(`deploy error: ${error}`)
-    console.error(`here are the args, for reference:`)
     console.log(JSON.stringify(argv, null, 2))
     process.exitCode = 1
   })
