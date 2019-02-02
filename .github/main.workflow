@@ -23,7 +23,6 @@ action "test" {
 action "deploy" {
   needs = ["test"]
   uses = "./"
-  args = "--help"
   secrets = [
     "GITHUB_TOKEN",
     "NOW_TOKEN",
