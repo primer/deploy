@@ -1,6 +1,6 @@
 const {dirname} = require('path')
 const getBranch = require('./get-branch')
-const aliasStatus = require('./commit-status')
+const aliasStatus = require('./alias-status')
 const getBranchAlias = require('./get-alias')
 const readJSON = require('./read-json')
 

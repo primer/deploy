@@ -2,13 +2,13 @@ const mockedEnv = require('mocked-env')
 const readJSON = require('../read-json')
 const deploy = require('../deploy')
 const now = require('../now')
-const commitStatus = require('../commit-status')
+const aliasStatus = require('../alias-status')
 
 jest.mock('../now')
 jest.mock('../read-json')
-jest.mock('../commit-status')
+jest.mock('../alias-status')
 
-commitStatus.mockImplementation(() => Promise.resolve({}))
+aliasStatus.mockImplementation(() => Promise.resolve({}))
 
 describe('deploy()', () => {
   let restoreEnv = () => {}
