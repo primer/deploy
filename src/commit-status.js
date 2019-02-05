@@ -1,16 +1,12 @@
-const {post} = require('commit-status')
+const actionStatus = require('action-status')
 
-module.exports = function commitStatus(host) {
-  const {GITHUB_ACTION = 'deploy', GITHUB_REPOSITORY, GITHUB_SHA, GITHUB_TOKEN = ''} = process.env
-  const [owner, repo] = GITHUB_REPOSITORY.split('/')
-  return post({
-    token: GITHUB_TOKEN,
-    owner,
-    repo,
-    sha: GITHUB_SHA,
+module.exports = function createStatus(host, overrides = {}) {
+  const {GITHUB_ACTION = 'deploy'} = process.env
+  return actionStatus({
     context: `${GITHUB_ACTION}/alias`,
     state: 'success',
     description: `Aliased to ${host}`,
-    url: `https://${host}`
+    url: `https://${host}`,
+    ...overrides
   })
 }

@@ -1,8 +1,10 @@
 const {dirname} = require('path')
 const getBranch = require('./get-branch')
-const commitStatus = require('./commit-status')
+const aliasStatus = require('./commit-status')
 const getBranchAlias = require('./get-alias')
 const readJSON = require('./read-json')
+
+const CONFIG_KEY = '@primer/deploy'
 
 module.exports = function deploy(options = {}, nowArgs = []) {
   const {dryRun} = options
@@ -10,6 +12,7 @@ module.exports = function deploy(options = {}, nowArgs = []) {
 
   const nowJson = readJSON('now.json') || {}
   const packageJson = readJSON('package.json') || {}
+  const config = packageJson[CONFIG_KEY] || {}
   const rulesJson = readJSON('rules.json')
 
   const name = nowJson.name || packageJson.name || dirname(process.cwd())
@@ -35,14 +38,14 @@ module.exports = function deploy(options = {}, nowArgs = []) {
       if (branch === 'master' && !rulesJson) {
         res.url = prodAlias
         return now([...nowArgs, 'alias', url, prodAlias])
-          .then(() => commitStatus(prodAlias))
+          .then(() => aliasStatus(prodAlias, config.status))
           .then(() => res)
       }
       const branchAlias = getBranchAlias(name, branch)
       if (branchAlias) {
         res.url = res.alias = branchAlias
         return now([...nowArgs, 'alias', url, branchAlias])
-          .then(() => commitStatus(branchAlias))
+          .then(() => aliasStatus(branchAlias, config.status))
           .then(() => {
             if (branch === 'master' && rulesJson) {
               const {alias} = res
@@ -54,7 +57,9 @@ module.exports = function deploy(options = {}, nowArgs = []) {
                 return res
               }
               res.url = prodAlias
-              return now([...nowArgs, 'alias', '-r', 'rules.json', prodAlias]).then(() => commitStatus(prodAlias))
+              return now([...nowArgs, 'alias', '-r', 'rules.json', prodAlias]).then(() =>
+                aliasStatus(prodAlias, config.status)
+              )
             }
           })
           .then(() => res)
