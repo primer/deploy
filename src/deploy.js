@@ -4,6 +4,8 @@ const aliasStatus = require('./alias-status')
 const getBranchAlias = require('./get-alias')
 const readJSON = require('./read-json')
 
+const CONFIG_KEY = '@primer/deploy'
+
 module.exports = function deploy(options = {}, nowArgs = []) {
   const {dryRun} = options
   const now = dryRun ? nowDryRun : require('./now')
@@ -11,6 +13,9 @@ module.exports = function deploy(options = {}, nowArgs = []) {
   const nowJson = readJSON('now.json') || {}
   const packageJson = readJSON('package.json') || {}
   const rulesJson = readJSON('rules.json')
+
+  const config = packageJson[CONFIG_KEY] || {}
+  const {releaseBranch = 'master'} = config
 
   const name = nowJson.name || packageJson.name || dirname(process.cwd())
   const branch = getBranch(name)
@@ -32,19 +37,19 @@ module.exports = function deploy(options = {}, nowArgs = []) {
     .then(res => {
       const {url} = res
       const prodAlias = nowJson.alias
-      if (branch === 'master' && !rulesJson) {
+      if (branch === releaseBranch && !rulesJson) {
         res.url = prodAlias
         return now([...nowArgs, 'alias', url, prodAlias])
-          .then(() => aliasStatus(prodAlias))
+          .then(() => aliasStatus(prodAlias, config.status))
           .then(() => res)
       }
       const branchAlias = getBranchAlias(name, branch)
       if (branchAlias) {
         res.url = res.alias = branchAlias
         return now([...nowArgs, 'alias', url, branchAlias])
-          .then(() => aliasStatus(branchAlias))
+          .then(() => aliasStatus(branchAlias, config.status))
           .then(() => {
-            if (branch === 'master' && rulesJson) {
+            if (branch === releaseBranch && rulesJson) {
               const {alias} = res
               if (!prodAlias) {
                 log(`no alias field in now.json; skipping rules.json`)
@@ -54,7 +59,9 @@ module.exports = function deploy(options = {}, nowArgs = []) {
                 return res
               }
               res.url = prodAlias
-              return now([...nowArgs, 'alias', '-r', 'rules.json', prodAlias]).then(() => aliasStatus(prodAlias))
+              return now([...nowArgs, 'alias', '-r', 'rules.json', prodAlias]).then(() =>
+                aliasStatus(prodAlias, config.status)
+              )
             }
           })
           .then(() => res)
