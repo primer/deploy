@@ -4,15 +4,12 @@ const aliasStatus = require('./alias-status')
 const getBranchAlias = require('./get-alias')
 const readJSON = require('./read-json')
 
-const CONFIG_KEY = '@primer/deploy'
-
 module.exports = function deploy(options = {}, nowArgs = []) {
   const {dryRun} = options
   const now = dryRun ? nowDryRun : require('./now')
 
   const nowJson = readJSON('now.json') || {}
   const packageJson = readJSON('package.json') || {}
-  const config = packageJson[CONFIG_KEY] || {}
   const rulesJson = readJSON('rules.json')
 
   const name = nowJson.name || packageJson.name || dirname(process.cwd())
@@ -38,14 +35,14 @@ module.exports = function deploy(options = {}, nowArgs = []) {
       if (branch === 'master' && !rulesJson) {
         res.url = prodAlias
         return now([...nowArgs, 'alias', url, prodAlias])
-          .then(() => aliasStatus(prodAlias, config.status))
+          .then(() => aliasStatus(prodAlias))
           .then(() => res)
       }
       const branchAlias = getBranchAlias(name, branch)
       if (branchAlias) {
         res.url = res.alias = branchAlias
         return now([...nowArgs, 'alias', url, branchAlias])
-          .then(() => aliasStatus(branchAlias, config.status))
+          .then(() => aliasStatus(branchAlias))
           .then(() => {
             if (branch === 'master' && rulesJson) {
               const {alias} = res
@@ -58,7 +55,7 @@ module.exports = function deploy(options = {}, nowArgs = []) {
               }
               res.url = prodAlias
               return now([...nowArgs, 'alias', '-r', 'rules.json', prodAlias]).then(() =>
-                aliasStatus(prodAlias, config.status)
+                aliasStatus(prodAlias)
               )
             }
           })
