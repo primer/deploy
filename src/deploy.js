@@ -54,9 +54,7 @@ module.exports = function deploy(options = {}, nowArgs = []) {
                 return res
               }
               res.url = prodAlias
-              return now([...nowArgs, 'alias', '-r', 'rules.json', prodAlias]).then(() =>
-                aliasStatus(prodAlias)
-              )
+              return now([...nowArgs, 'alias', '-r', 'rules.json', prodAlias]).then(() => aliasStatus(prodAlias))
             }
           })
           .then(() => res)
