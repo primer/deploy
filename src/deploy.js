@@ -1,6 +1,6 @@
 const {dirname} = require('path')
 const getBranch = require('./get-branch')
-const commitStatus = require('./commit-status')
+const aliasStatus = require('./alias-status')
 const getBranchAlias = require('./get-alias')
 const readJSON = require('./read-json')
 
@@ -35,14 +35,14 @@ module.exports = function deploy(options = {}, nowArgs = []) {
       if (branch === 'master' && !rulesJson) {
         res.url = prodAlias
         return now([...nowArgs, 'alias', url, prodAlias])
-          .then(() => commitStatus(prodAlias))
+          .then(() => aliasStatus(prodAlias))
           .then(() => res)
       }
       const branchAlias = getBranchAlias(name, branch)
       if (branchAlias) {
         res.url = res.alias = branchAlias
         return now([...nowArgs, 'alias', url, branchAlias])
-          .then(() => commitStatus(branchAlias))
+          .then(() => aliasStatus(branchAlias))
           .then(() => {
             if (branch === 'master' && rulesJson) {
               const {alias} = res
@@ -54,7 +54,7 @@ module.exports = function deploy(options = {}, nowArgs = []) {
                 return res
               }
               res.url = prodAlias
-              return now([...nowArgs, 'alias', '-r', 'rules.json', prodAlias]).then(() => commitStatus(prodAlias))
+              return now([...nowArgs, 'alias', '-r', 'rules.json', prodAlias]).then(() => aliasStatus(prodAlias))
             }
           })
           .then(() => res)
