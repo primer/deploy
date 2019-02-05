@@ -14,4 +14,4 @@ COPY . /
 WORKDIR /
 RUN ["npm", "install", "--production"]
 
-ENTRYPOINT "/entrypoint.js"
+ENTRYPOINT ["/entrypoint.js"]
