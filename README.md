@@ -44,7 +44,7 @@ It's possible to pass additional arguments through to the `now` CLI via the `arg
 ```diff
 action "deploy" {
   uses = "primer/deploy@master"
-+  args = "-- --meta foo=bar"
++  args = "-- --meta autoDeployed=true"
 ```
 
 You can also use `args` to deploy a subdirectory, e.g. `docs`:
