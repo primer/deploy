@@ -5,7 +5,7 @@ LABEL com.github.actions.description="Deploy to now with branch and tag aliases"
 LABEL com.github.actions.icon="triangle"
 LABEL com.github.actions.color="black"
 
-LABEL version="2.1.0"
+LABEL version="2.2.0"
 LABEL repository="http://github.com/primer/actions"
 LABEL homepage="http://github.com/primer/actions/tree/master/deploy"
 LABEL maintainer="GitHub Design Systems <design-systems@github.com>"
