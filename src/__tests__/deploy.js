@@ -8,15 +8,15 @@ jest.mock('../now')
 jest.mock('../read-json')
 jest.mock('../alias-status')
 
+now.mockImplementation(() => Promise.resolve('<mocked url>'))
 aliasStatus.mockImplementation(() => Promise.resolve({}))
 
 describe('deploy()', () => {
   let restoreEnv = () => {}
   afterEach(() => {
     restoreEnv()
-    // clear the call data
+    aliasStatus.mockReset()
     now.mockReset()
-    // restore the original behavior
     readJSON.mockReset()
   })
 
@@ -28,7 +28,7 @@ describe('deploy()', () => {
     })
 
     const root = 'foo-123.now.sh'
-    now.mockImplementation(() => Promise.resolve(root))
+    mockResolve(now, root)
     mockEnv({GITHUB_REF: ''})
 
     return deploy().then(res => {
@@ -47,7 +47,7 @@ describe('deploy()', () => {
 
     const root = 'foo-123.now.sh'
     const alias = 'foo-bar.now.sh'
-    now.mockImplementation(() => Promise.resolve(root))
+    mockResolve(now, root)
     mockEnv({GITHUB_REF: 'refs/heads/bar'})
 
     return deploy().then(res => {
@@ -68,7 +68,7 @@ describe('deploy()', () => {
     })
 
     const root = 'hello-123.now.sh'
-    now.mockImplementation(() => Promise.resolve(root))
+    mockResolve(now, root)
     mockEnv({GITHUB_REF: 'refs/heads/master'})
 
     return deploy().then(res => {
@@ -90,7 +90,7 @@ describe('deploy()', () => {
 
     const root = 'foo-123.now.sh'
     const alias = 'foo-bar.now.sh'
-    now.mockImplementation(() => Promise.resolve(root))
+    mockResolve(now, root)
     mockEnv({GITHUB_REF: 'refs/heads/bar'})
 
     return deploy().then(res => {
@@ -112,7 +112,7 @@ describe('deploy()', () => {
 
     const root = 'primer-style-123.now.sh'
     const alias = 'primer-style.now.sh'
-    now.mockImplementation(() => Promise.resolve(root))
+    mockResolve(now, root)
     mockEnv({GITHUB_REF: 'refs/heads/master'})
 
     return deploy().then(res => {
@@ -131,9 +131,9 @@ describe('deploy()', () => {
       'rules.json': null
     })
 
-    const root = 'primer-css-v12.now.sh'
+    const root = 'primer-css-abc123.now.sh'
     const alias = 'primer-css-v12.now.sh'
-    now.mockImplementation(() => Promise.resolve(root))
+    mockResolve(now, root)
     mockEnv({GITHUB_REF: 'refs/heads/v12'})
 
     return deploy({}, ['docs']).then(res => {
@@ -141,6 +141,50 @@ describe('deploy()', () => {
       expect(now).toHaveBeenNthCalledWith(1, ['docs'])
       expect(now).toHaveBeenNthCalledWith(2, ['docs', 'alias', root, alias])
       expect(res).toEqual({name: '@primer/css', root, alias, url: alias})
+    })
+  })
+
+  it('respects the @primer/config "releaseBranch" key in package.json', () => {
+    const alias = 'derp.style'
+    mockFiles({
+      'package.json': {
+        name: 'derp',
+        '@primer/deploy': {
+          releaseBranch: 'release'
+        }
+      },
+      'now.json': {alias},
+      'rules.json': null
+    })
+
+    const root = 'derp-abc123.now.sh'
+    mockResolve(now, root)
+    mockEnv({GITHUB_REF: 'refs/heads/release'})
+
+    return deploy().then(res => {
+      expect(now).toHaveBeenCalledTimes(2)
+      expect(now).toHaveBeenNthCalledWith(1, [])
+      expect(now).toHaveBeenNthCalledWith(2, ['alias', root, alias])
+      expect(res).toEqual({name: 'derp', root, url: alias})
+    })
+  })
+
+  it('passes the "status" key to aliasStatus() calls', () => {
+    const statusOptions = {context: 'hello'}
+    mockFiles({
+      'package.json': {
+        name: 'hi',
+        '@primer/deploy': {
+          status: statusOptions
+        }
+      }
+    })
+
+    mockResolve(now, 'derp-123.now.sh')
+    mockEnv({GITHUB_REF: 'refs/heads/derp'})
+
+    return deploy().then(() => {
+      expect(aliasStatus).toHaveBeenCalledWith('hi-derp.now.sh', statusOptions)
     })
   })
 
@@ -154,5 +198,9 @@ describe('deploy()', () => {
         return files[path]
       }
     })
+  }
+
+  function mockResolve(fn, value) {
+    fn.mockImplementation(() => Promise.resolve(value))
   }
 })
