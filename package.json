@@ -7,7 +7,7 @@
     "primer-deploy": "entrypoint.js"
   },
   "scripts": {
-    "lint": "eslint src",
+    "lint": "eslint *.js src",
     "test": "jest"
   },
   "jest": {
