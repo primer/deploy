@@ -1,5 +1,6 @@
 {
   "name": "@primer/deploy",
+  "version": "2.0.0",
   "author": "GitHub, Inc.",
   "license": "MIT",
   "bin": {
@@ -26,6 +27,5 @@
     "eslint-plugin-github": "^1.8.1",
     "jest": "^24.0.0",
     "mocked-env": "^1.2.4"
-  },
-  "version": "2.0.0"
+  }
 }
