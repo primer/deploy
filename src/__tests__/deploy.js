@@ -183,7 +183,7 @@ describe('deploy()', () => {
     mockResolve(now, 'derp-123.now.sh')
     mockEnv({GITHUB_REF: 'refs/heads/derp'})
 
-    return deploy().then(res => {
+    return deploy().then(() => {
       expect(aliasStatus).toHaveBeenCalledWith('hi-derp.now.sh', statusOptions)
     })
   })
