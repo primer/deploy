@@ -10,8 +10,8 @@ LABEL repository="http://github.com/primer/actions"
 LABEL homepage="http://github.com/primer/actions/tree/master/deploy"
 LABEL maintainer="GitHub Design Systems <design-systems@github.com>"
 
-COPY . /
-WORKDIR /
+WORKDIR /primer-deploy
+COPY . .
 RUN ["npm", "install", "--production"]
 
-ENTRYPOINT ["/entrypoint.js"]
+ENTRYPOINT ["/primer-deploy/entrypoint.js"]
