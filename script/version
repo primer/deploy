@@ -1,0 +1,5 @@
+#!/bin/bash
+set -e
+version=${npm_package_version:-$(jq -r .version package.json)}
+perl -pi -e "s#LABEL version=\".*\"#LABEL version=\"$version\"#" Dockerfile
+git add Dockerfile
