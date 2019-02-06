@@ -18,12 +18,12 @@ const yargs = require('yargs')
 const {argv} = yargs
 
 if (argv.help) {
-  return yargs.showHelp()
+  yargs.showHelp()
+  process.exit(0)
 }
 
 const {promisify} = require('util')
 const writeFile = promisify(require('fs').writeFile)
-const {dirname, join} = require('path')
 const deploy = require('.')
 
 deploy(argv, argv._)
