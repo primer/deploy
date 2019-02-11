@@ -10,7 +10,7 @@ workflow "lint, test, deploy" {
 
 action "npm install" {
   uses = "actions/npm@master"
-  runs = ["npm", "install"]
+  runs = ["npm", "ci"]
 }
 
 action "lint" {
