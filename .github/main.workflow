@@ -1,6 +1,11 @@
 workflow "lint, test, deploy" {
   on = "push"
-  resolves = ["lint", "test", "deploy"]
+  resolves = [
+    "lint",
+    "test",
+    "deploy",
+    "publish",
+  ]
 }
 
 action "npm install" {
@@ -26,5 +31,13 @@ action "deploy" {
   secrets = [
     "GITHUB_TOKEN",
     "NOW_TOKEN",
+  ]
+}
+
+action "publish" {
+  needs = ["test"]
+  uses = "primer/publish@v1.0.0"
+  secrets = [
+    "GITHUB_TOKEN",
   ]
 }
