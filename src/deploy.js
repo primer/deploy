@@ -3,8 +3,10 @@ const getBranch = require('./get-branch')
 const aliasStatus = require('./alias-status')
 const getBranchAlias = require('./get-alias')
 const readJSON = require('./read-json')
+const retry = require('./retry')
 
 const CONFIG_KEY = '@primer/deploy'
+const DEFAULT_RETRIES = 3
 
 module.exports = function deploy(options = {}, nowArgs = []) {
   const {dryRun} = options
@@ -17,11 +19,15 @@ module.exports = function deploy(options = {}, nowArgs = []) {
   const config = packageJson[CONFIG_KEY] || {}
   const {releaseBranch = 'master'} = config
 
+  const configAndOptions = Object.assign({}, config, options)
+  const {verify = false, retries = DEFAULT_RETRIES} = configAndOptions
+
   const name = nowJson.name || packageJson.name || dirname(process.cwd())
   const branch = getBranch(name)
 
   log(`deploying "${name}" with now...`)
-  return now(nowArgs)
+  const deployArgs = verify ? nowArgs : ['--no-verify', ...nowArgs]
+  return retry(() => now(deployArgs), retries)
     .then(url => {
       if (url) {
         log(`root deployment: ${url}`)
@@ -70,6 +76,8 @@ module.exports = function deploy(options = {}, nowArgs = []) {
       }
     })
 }
+
+Object.assign(module.exports, {DEFAULT_RETRIES})
 
 function log(message, ...args) {
   console.warn(`[deploy] ${message}`, ...args)
