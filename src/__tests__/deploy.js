@@ -39,7 +39,7 @@ describe('deploy()', () => {
 
     return deploy().then(res => {
       expect(now).toHaveBeenCalledTimes(1)
-      expect(now).toHaveBeenCalledWith([])
+      expect(now).toHaveBeenCalledWith(['--no-verify'])
       expect(res).toEqual({name: 'foo', root, url: root})
     })
   })
@@ -58,7 +58,7 @@ describe('deploy()', () => {
 
     return deploy().then(res => {
       expect(now).toHaveBeenCalledTimes(2)
-      expect(now).toHaveBeenNthCalledWith(1, [])
+      expect(now).toHaveBeenNthCalledWith(1, ['--no-verify'])
       expect(now).toHaveBeenNthCalledWith(2, ['alias', root, alias])
       expect(res).toEqual({name: 'foo', root, alias, url: alias})
     })
@@ -79,7 +79,7 @@ describe('deploy()', () => {
 
     return deploy().then(res => {
       expect(now).toHaveBeenCalledTimes(2)
-      expect(now).toHaveBeenNthCalledWith(1, [])
+      expect(now).toHaveBeenNthCalledWith(1, ['--no-verify'])
       expect(now).toHaveBeenNthCalledWith(2, ['alias', root, alias])
       expect(res).toEqual({name, root, url: alias})
     })
@@ -101,7 +101,7 @@ describe('deploy()', () => {
 
     return deploy().then(res => {
       expect(now).toHaveBeenCalledTimes(2)
-      expect(now).toHaveBeenNthCalledWith(1, [])
+      expect(now).toHaveBeenNthCalledWith(1, ['--no-verify'])
       expect(now).toHaveBeenNthCalledWith(2, ['alias', root, alias])
       expect(res).toEqual({name: 'foo', root, alias, url: alias})
     })
@@ -123,7 +123,7 @@ describe('deploy()', () => {
 
     return deploy().then(res => {
       expect(now).toHaveBeenCalledTimes(3)
-      expect(now).toHaveBeenNthCalledWith(1, [])
+      expect(now).toHaveBeenNthCalledWith(1, ['--no-verify'])
       expect(now).toHaveBeenNthCalledWith(2, ['alias', root, alias])
       expect(now).toHaveBeenNthCalledWith(3, ['alias', '-r', 'rules.json', prodAlias])
       expect(res).toEqual({name: 'primer-style', root, alias, url: prodAlias})
@@ -144,7 +144,7 @@ describe('deploy()', () => {
 
     return deploy({}, ['docs']).then(res => {
       expect(now).toHaveBeenCalledTimes(2)
-      expect(now).toHaveBeenNthCalledWith(1, ['docs'])
+      expect(now).toHaveBeenNthCalledWith(1, ['--no-verify', 'docs'])
       expect(now).toHaveBeenNthCalledWith(2, ['docs', 'alias', root, alias])
       expect(res).toEqual({name: '@primer/css', root, alias, url: alias})
     })
@@ -169,7 +169,7 @@ describe('deploy()', () => {
 
     return deploy().then(res => {
       expect(now).toHaveBeenCalledTimes(2)
-      expect(now).toHaveBeenNthCalledWith(1, [])
+      expect(now).toHaveBeenNthCalledWith(1, ['--no-verify'])
       expect(now).toHaveBeenNthCalledWith(2, ['alias', root, alias])
       expect(res).toEqual({name: 'derp', root, url: alias})
     })
@@ -208,13 +208,13 @@ describe('deploy()', () => {
     })
 
     it('rejects after the third try', async () => {
-      const message ='simulated failure'
+      const message = 'simulated failure'
       now.mockImplementation(() => Promise.reject(message))
       await expect(deploy()).rejects.toBe(message)
       expect(now).toHaveBeenCalledTimes(3)
     })
 
-    it('respects the "retries" option', async () => {
+    it('respects the "retries" option', () => {
       const url = 'https://five-times.now.sh'
       now
         .mockImplementationOnce(() => Promise.reject('simulated failure 1'))
@@ -226,6 +226,13 @@ describe('deploy()', () => {
         expect(res.url).toBe(url)
         expect(now).toHaveBeenCalledTimes(5)
       })
+    })
+  })
+
+  it('respects the "verify" option', () => {
+    return deploy({verify: true}).then(res => {
+      expect(now).toHaveBeenCalledTimes(1)
+      expect(now).toHaveBeenNthCalledWith(1, [])
     })
   })
 
