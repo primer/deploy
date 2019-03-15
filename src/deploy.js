@@ -19,7 +19,7 @@ module.exports = function deploy(options = {}, nowArgs = []) {
   const {releaseBranch = 'master'} = config
 
   const configAndOptions = Object.assign({}, config, options)
-  const {verify = false, retries = 3} = configAndOptions
+  const {verify = false, retries = 0} = configAndOptions
 
   const name = nowJson.name || packageJson.name || dirname(process.cwd())
   const branch = getBranch(name)
