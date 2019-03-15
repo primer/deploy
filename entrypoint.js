@@ -16,6 +16,10 @@ const yargs = require('yargs')
     default: 3,
     describe: 'Re-try deployment this number of times before giving up'
   })
+  .option('verify', {
+    type: 'boolean',
+    describe: 'Unless provided, pass --no-verify to the Now CLI'
+  })
   .option('help', {
     alias: 'h',
     type: 'boolean',
