@@ -18,4 +18,3 @@ module.exports = function retry(fn, times) {
     })
   }
 }
-
