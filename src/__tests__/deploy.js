@@ -22,8 +22,9 @@ describe('deploy()', () => {
   afterEach(() => {
     restoreEnv()
     aliasStatus.mockReset()
-    now.mockReset()
     readJSON.mockReset()
+    // restore brings back the original implementation!
+    now.mockRestore()
   })
 
   it('calls now() once when GITHUB_REF is unset', () => {
