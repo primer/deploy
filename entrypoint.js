@@ -10,6 +10,12 @@ const yargs = require('yargs')
     type: 'boolean',
     describe: `Print the sequence of commands, but don't actually run anything`
   })
+  .option('retries', {
+    alias: 'r',
+    type: 'number',
+    default: 3,
+    describe: 'Re-try deployment this number of times before giving up'
+  })
   .option('help', {
     alias: 'h',
     type: 'boolean',
