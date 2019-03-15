@@ -8,11 +8,17 @@ jest.mock('../now')
 jest.mock('../read-json')
 jest.mock('../alias-status')
 
-now.mockImplementation(() => Promise.resolve('<mocked url>'))
 aliasStatus.mockImplementation(() => Promise.resolve({}))
 
 describe('deploy()', () => {
+  // the default now() mock implementation
+  const nowMockImpl = () => Promise.resolve('<mocked url>')
   let restoreEnv = () => {}
+
+  beforeEach(() => {
+    now.mockImplementation(nowMockImpl)
+  })
+
   afterEach(() => {
     restoreEnv()
     aliasStatus.mockReset()
@@ -185,6 +191,41 @@ describe('deploy()', () => {
 
     return deploy().then(() => {
       expect(aliasStatus).toHaveBeenCalledWith('hi-derp.now.sh', statusOptions)
+    })
+  })
+
+  describe('resilience', () => {
+    it('retries up to 3 times', () => {
+      const url = 'https://third-times-a-charm.now.sh'
+      now
+        .mockImplementationOnce(() => Promise.reject('simulated failure 1'))
+        .mockImplementationOnce(() => Promise.reject('simulated failure 2'))
+        .mockImplementationOnce(() => Promise.resolve(url))
+      return deploy().then(res => {
+        expect(res.url).toBe(url)
+        expect(now).toHaveBeenCalledTimes(3)
+      })
+    })
+
+    it('rejects after the third try', async () => {
+      const message ='simulated failure'
+      now.mockImplementation(() => Promise.reject(message))
+      await expect(deploy()).rejects.toBe(message)
+      expect(now).toHaveBeenCalledTimes(3)
+    })
+
+    it('respects the "retries" option', async () => {
+      const url = 'https://five-times.now.sh'
+      now
+        .mockImplementationOnce(() => Promise.reject('simulated failure 1'))
+        .mockImplementationOnce(() => Promise.reject('simulated failure 2'))
+        .mockImplementationOnce(() => Promise.reject('simulated failure 3'))
+        .mockImplementationOnce(() => Promise.reject('simulated failure 4'))
+        .mockImplementationOnce(() => Promise.resolve(url))
+      return deploy({retries: 5}).then(res => {
+        expect(res.url).toBe(url)
+        expect(now).toHaveBeenCalledTimes(5)
+      })
     })
   })
 
