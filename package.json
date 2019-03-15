@@ -1,6 +1,6 @@
 {
   "name": "@primer/deploy",
-  "version": "2.2.2",
+  "version": "3.0.0",
   "author": "GitHub, Inc.",
   "license": "MIT",
   "bin": {

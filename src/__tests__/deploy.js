@@ -8,16 +8,22 @@ jest.mock('../now')
 jest.mock('../read-json')
 jest.mock('../alias-status')
 
-now.mockImplementation(() => Promise.resolve('<mocked url>'))
 aliasStatus.mockImplementation(() => Promise.resolve({}))
+
+// the default now() mock implementation just returns a fake URL
+const nowMockImpl = () => Promise.resolve('mocked-next-url.now.sh')
+// we need to be sure to mock this before every test so that it
+// doesn't *actually* run
+now.mockImplementation(nowMockImpl)
 
 describe('deploy()', () => {
   let restoreEnv = () => {}
+
   afterEach(() => {
     restoreEnv()
     aliasStatus.mockReset()
-    now.mockReset()
     readJSON.mockReset()
+    now.mockReset()
   })
 
   it('calls now() once when GITHUB_REF is unset', () => {
@@ -33,7 +39,7 @@ describe('deploy()', () => {
 
     return deploy().then(res => {
       expect(now).toHaveBeenCalledTimes(1)
-      expect(now).toHaveBeenCalledWith([])
+      expect(now).toHaveBeenCalledWith(['--no-verify'])
       expect(res).toEqual({name: 'foo', root, url: root})
     })
   })
@@ -52,7 +58,7 @@ describe('deploy()', () => {
 
     return deploy().then(res => {
       expect(now).toHaveBeenCalledTimes(2)
-      expect(now).toHaveBeenNthCalledWith(1, [])
+      expect(now).toHaveBeenNthCalledWith(1, ['--no-verify'])
       expect(now).toHaveBeenNthCalledWith(2, ['alias', root, alias])
       expect(res).toEqual({name: 'foo', root, alias, url: alias})
     })
@@ -73,7 +79,7 @@ describe('deploy()', () => {
 
     return deploy().then(res => {
       expect(now).toHaveBeenCalledTimes(2)
-      expect(now).toHaveBeenNthCalledWith(1, [])
+      expect(now).toHaveBeenNthCalledWith(1, ['--no-verify'])
       expect(now).toHaveBeenNthCalledWith(2, ['alias', root, alias])
       expect(res).toEqual({name, root, url: alias})
     })
@@ -95,7 +101,7 @@ describe('deploy()', () => {
 
     return deploy().then(res => {
       expect(now).toHaveBeenCalledTimes(2)
-      expect(now).toHaveBeenNthCalledWith(1, [])
+      expect(now).toHaveBeenNthCalledWith(1, ['--no-verify'])
       expect(now).toHaveBeenNthCalledWith(2, ['alias', root, alias])
       expect(res).toEqual({name: 'foo', root, alias, url: alias})
     })
@@ -117,7 +123,7 @@ describe('deploy()', () => {
 
     return deploy().then(res => {
       expect(now).toHaveBeenCalledTimes(3)
-      expect(now).toHaveBeenNthCalledWith(1, [])
+      expect(now).toHaveBeenNthCalledWith(1, ['--no-verify'])
       expect(now).toHaveBeenNthCalledWith(2, ['alias', root, alias])
       expect(now).toHaveBeenNthCalledWith(3, ['alias', '-r', 'rules.json', prodAlias])
       expect(res).toEqual({name: 'primer-style', root, alias, url: prodAlias})
@@ -138,7 +144,7 @@ describe('deploy()', () => {
 
     return deploy({}, ['docs']).then(res => {
       expect(now).toHaveBeenCalledTimes(2)
-      expect(now).toHaveBeenNthCalledWith(1, ['docs'])
+      expect(now).toHaveBeenNthCalledWith(1, ['--no-verify', 'docs'])
       expect(now).toHaveBeenNthCalledWith(2, ['docs', 'alias', root, alias])
       expect(res).toEqual({name: '@primer/css', root, alias, url: alias})
     })
@@ -163,7 +169,7 @@ describe('deploy()', () => {
 
     return deploy().then(res => {
       expect(now).toHaveBeenCalledTimes(2)
-      expect(now).toHaveBeenNthCalledWith(1, [])
+      expect(now).toHaveBeenNthCalledWith(1, ['--no-verify'])
       expect(now).toHaveBeenNthCalledWith(2, ['alias', root, alias])
       expect(res).toEqual({name: 'derp', root, url: alias})
     })
@@ -185,6 +191,53 @@ describe('deploy()', () => {
 
     return deploy().then(() => {
       expect(aliasStatus).toHaveBeenCalledWith('hi-derp.now.sh', statusOptions)
+    })
+  })
+
+  describe('resilience', () => {
+    it('retries up to 3 times', () => {
+      const url = 'third-times-a-charm.now.sh'
+      mockEnv({GITHUB_REF: ''})
+      now
+        .mockImplementationOnce(() => Promise.reject('simulated failure 1'))
+        .mockImplementationOnce(() => Promise.reject('simulated failure 2'))
+        .mockImplementationOnce(() => Promise.resolve(url))
+      return deploy().then(res => {
+        expect(res.url).toBe(url)
+        expect(now).toHaveBeenCalledTimes(3)
+      })
+    })
+
+    it('rejects after the third try', async () => {
+      const message = 'simulated failure'
+      mockEnv({GITHUB_REF: ''})
+      now.mockImplementation(() => Promise.reject(message))
+      await expect(deploy()).rejects.toBe(message)
+      expect(now).toHaveBeenCalledTimes(3)
+    })
+
+    it('respects the "retries" option', () => {
+      const url = 'five-times.now.sh'
+      mockEnv({GITHUB_REF: ''})
+      now
+        .mockImplementationOnce(() => Promise.reject('simulated failure 1'))
+        .mockImplementationOnce(() => Promise.reject('simulated failure 2'))
+        .mockImplementationOnce(() => Promise.reject('simulated failure 3'))
+        .mockImplementationOnce(() => Promise.reject('simulated failure 4'))
+        .mockImplementationOnce(() => Promise.resolve(url))
+      return deploy({retries: 5}).then(res => {
+        expect(res.url).toBe(url)
+        expect(now).toHaveBeenCalledTimes(5)
+      })
+    })
+  })
+
+  it('does *not* call `now --no-verify` when the "verify" option is truthy', () => {
+    mockEnv({GITHUB_REF: ''})
+    now.mockImplementation(nowMockImpl)
+    return deploy({verify: true}).then(() => {
+      expect(now).toHaveBeenCalledTimes(1)
+      expect(now).toHaveBeenNthCalledWith(1, [])
     })
   })
 
