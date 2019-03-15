@@ -19,13 +19,14 @@ module.exports = function deploy(options = {}, nowArgs = []) {
   const {releaseBranch = 'master'} = config
 
   const configAndOptions = Object.assign({}, config, options)
-  const retries = configAndOptions.retries || 3
+  const {verify, retries = 3} = configAndOptions
 
   const name = nowJson.name || packageJson.name || dirname(process.cwd())
   const branch = getBranch(name)
 
   log(`deploying "${name}" with now...`)
-  return retry(() => now(nowArgs), retries)
+  const deployArgs = verify ? nowArgs : ['--no-verify', ...nowArgs]
+  return retry(() => now(deployArgs), retries)
     .then(url => {
       if (url) {
         log(`root deployment: ${url}`)
