@@ -1,6 +1,8 @@
 const execa = require('execa')
 
-const {bin: {now: NOW_BIN_PATH}} = require('now/package.json')
+const {
+  bin: {now: NOW_BIN_PATH}
+} = require('now/package.json')
 const NOW_BIN = require.resolve(`now/${NOW_BIN_PATH}`)
 
 module.exports = function now(args = []) {
