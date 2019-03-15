@@ -10,21 +10,20 @@ jest.mock('../alias-status')
 
 aliasStatus.mockImplementation(() => Promise.resolve({}))
 
-describe('deploy()', () => {
-  // the default now() mock implementation
-  const nowMockImpl = () => Promise.resolve('<mocked url>')
-  let restoreEnv = () => {}
+// the default now() mock implementation just returns a fake URL
+const nowMockImpl = () => Promise.resolve('mocked-next-url.now.sh')
+// we need to be sure to mock this before every test so that it
+// doesn't *actually* run
+now.mockImplementation(nowMockImpl)
 
-  beforeEach(() => {
-    now.mockImplementation(nowMockImpl)
-  })
+describe('deploy()', () => {
+  let restoreEnv = () => {}
 
   afterEach(() => {
     restoreEnv()
     aliasStatus.mockReset()
     readJSON.mockReset()
-    // restore brings back the original implementation!
-    now.mockRestore()
+    now.mockReset()
   })
 
   it('calls now() once when GITHUB_REF is unset', () => {
@@ -197,7 +196,8 @@ describe('deploy()', () => {
 
   describe('resilience', () => {
     it('retries up to 3 times', () => {
-      const url = 'https://third-times-a-charm.now.sh'
+      const url = 'third-times-a-charm.now.sh'
+      mockEnv({GITHUB_REF: ''})
       now
         .mockImplementationOnce(() => Promise.reject('simulated failure 1'))
         .mockImplementationOnce(() => Promise.reject('simulated failure 2'))
@@ -210,13 +210,15 @@ describe('deploy()', () => {
 
     it('rejects after the third try', async () => {
       const message = 'simulated failure'
+      mockEnv({GITHUB_REF: ''})
       now.mockImplementation(() => Promise.reject(message))
       await expect(deploy()).rejects.toBe(message)
       expect(now).toHaveBeenCalledTimes(3)
     })
 
     it('respects the "retries" option', () => {
-      const url = 'https://five-times.now.sh'
+      const url = 'five-times.now.sh'
+      mockEnv({GITHUB_REF: ''})
       now
         .mockImplementationOnce(() => Promise.reject('simulated failure 1'))
         .mockImplementationOnce(() => Promise.reject('simulated failure 2'))
@@ -231,6 +233,8 @@ describe('deploy()', () => {
   })
 
   it('does *not* call `now --no-verify` when the "verify" option is truthy', () => {
+    mockEnv({GITHUB_REF: ''})
+    now.mockImplementation(nowMockImpl)
     return deploy({verify: true}).then(() => {
       expect(now).toHaveBeenCalledTimes(1)
       expect(now).toHaveBeenNthCalledWith(1, [])
