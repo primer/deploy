@@ -3,6 +3,7 @@ const getBranch = require('./get-branch')
 const aliasStatus = require('./alias-status')
 const getBranchAlias = require('./get-alias')
 const readJSON = require('./read-json')
+const retry = require('./retry')
 
 const CONFIG_KEY = '@primer/deploy'
 
@@ -17,11 +18,14 @@ module.exports = function deploy(options = {}, nowArgs = []) {
   const config = packageJson[CONFIG_KEY] || {}
   const {releaseBranch = 'master'} = config
 
+  const configAndOptions = Object.assign({}, config, options)
+  const retries = configAndOptions.retries || 3
+
   const name = nowJson.name || packageJson.name || dirname(process.cwd())
   const branch = getBranch(name)
 
   log(`deploying "${name}" with now...`)
-  return now(nowArgs)
+  return retry(() => now(nowArgs), retries)
     .then(url => {
       if (url) {
         log(`root deployment: ${url}`)
