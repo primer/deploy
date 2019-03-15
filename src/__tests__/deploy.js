@@ -229,8 +229,8 @@ describe('deploy()', () => {
     })
   })
 
-  it('respects the "verify" option', () => {
-    return deploy({verify: true}).then(res => {
+  it('does *not* call `now --no-verify` when the "verify" option is truthy', () => {
+    return deploy({verify: true}).then(() => {
       expect(now).toHaveBeenCalledTimes(1)
       expect(now).toHaveBeenNthCalledWith(1, [])
     })
