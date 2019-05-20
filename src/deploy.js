@@ -1,4 +1,4 @@
-const {dirname} = require('path')
+const getAppName = require('./get-app-name')
 const getBranch = require('./get-branch')
 const aliasStatus = require('./alias-status')
 const getBranchAlias = require('./get-alias')
@@ -22,8 +22,8 @@ module.exports = function deploy(options = {}, nowArgs = []) {
   const configAndOptions = Object.assign({}, config, options)
   const {verify = false, retries = DEFAULT_RETRIES} = configAndOptions
 
-  const name = nowJson.name || packageJson.name || dirname(process.cwd())
-  const branch = getBranch(name)
+  const name = getAppName({nowJson, packageJson})
+  const branch = getBranch()
 
   log(`deploying "${name}" with now...`)
   const deployArgs = verify ? nowArgs : ['--no-verify', ...nowArgs]
