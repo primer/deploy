@@ -8,9 +8,9 @@ workflow "lint, test, deploy" {
   ]
 }
 
-workflow "clean up deployments" {
+workflow "clean up branch deployments" {
   on = "delete"
-  resolves = ["delete branch"]
+  resolves = ["deploy cleanup"]
 }
 
 action "npm install" {
@@ -48,8 +48,7 @@ action "publish" {
   ]
 }
 
-action "delete branch" {
-  needs = "npm install"
+action "deploy cleanup" {
   uses = "./"
   secrets = [
     "GITHUB_TOKEN",
