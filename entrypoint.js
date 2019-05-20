@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+const meta = require('github-action-meta')
 const {deploy, deleteBranch} = require('.')
 const {DEFAULT_RETRIES} = deploy
 const yargs = require('yargs')
@@ -39,6 +40,14 @@ const {promisify} = require('util')
 const writeFile = promisify(require('fs').writeFile)
 
 let command = argv._[0]
+const {event} = meta
+
+if (event === 'delete') {
+  command = 'delete'
+} else if (event === 'push') {
+  command = 'deploy'
+}
+
 if (!command || command === '--') {
   command = 'deploy'
 }
