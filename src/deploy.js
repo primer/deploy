@@ -4,13 +4,13 @@ const aliasStatus = require('./alias-status')
 const getBranchAlias = require('./get-alias')
 const readJSON = require('./read-json')
 const retry = require('./retry')
+const log = require('./log')
 
 const CONFIG_KEY = '@primer/deploy'
 const DEFAULT_RETRIES = 3
 
 module.exports = function deploy(options = {}, nowArgs = []) {
-  const {dryRun} = options
-  const now = dryRun ? nowDryRun : require('./now')
+  const now = options.dryRun ? require('./dry-run') : require('./now')
 
   const nowJson = readJSON('now.json') || {}
   const packageJson = readJSON('package.json') || {}
@@ -78,12 +78,3 @@ module.exports = function deploy(options = {}, nowArgs = []) {
 }
 
 Object.assign(module.exports, {DEFAULT_RETRIES})
-
-function log(message, ...args) {
-  console.warn(`[deploy] ${message}`, ...args)
-}
-
-function nowDryRun(args) {
-  log(`RUN: npx now`, ...args)
-  return Promise.resolve('<deployed-url>')
-}
