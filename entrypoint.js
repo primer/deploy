@@ -1,7 +1,8 @@
 #!/usr/bin/env node
-const deploy = require('.')
+const {deploy, deleteBranch} = require('.')
 const {DEFAULT_RETRIES} = deploy
 const yargs = require('yargs')
+  .usage('$0 [command] [options]')
   .option('out', {
     alias: 'o',
     type: 'string',
@@ -37,19 +38,47 @@ if (argv.help) {
 const {promisify} = require('util')
 const writeFile = promisify(require('fs').writeFile)
 
-deploy(argv, argv._)
-  .then(res => {
-    // write the message to stderr...
-    console.warn(`deploy completed!`)
-    const data = JSON.stringify(res, null, 2)
-    if (argv.out) {
-      return writeFile(argv.out, data, 'utf8')
-    } else {
-      console.log(data)
-    }
-  })
-  .catch(error => {
-    console.error(`deploy error: ${error}`)
+let command = argv._[0]
+if (!command || command === '--') {
+  command = 'deploy'
+}
+
+const reportError = message => {
+  return error => {
+    console.error(`${message}: ${error}`)
     console.log(JSON.stringify(argv, null, 2))
     process.exitCode = 1
-  })
+  }
+}
+
+switch (command) {
+  case 'delete':
+    deleteBranch(argv, argv._)
+      .then(deleted => {
+        if (deleted) {
+          console.warn(`branch ${deleted.branch} deleted`)
+        } else {
+          console.warn(`(nothing deleted)`)
+        }
+      })
+      .catch(reportError('branch delete error'))
+    break
+
+  case 'deploy':
+    deploy(argv, argv._)
+      .then(res => {
+        // write the message to stderr...
+        console.warn(`deploy completed!`)
+        const data = JSON.stringify(res, null, 2)
+        if (argv.out) {
+          return writeFile(argv.out, data, 'utf8')
+        } else {
+          console.log(data)
+        }
+      })
+      .catch(reportError('deploy error'))
+    break
+
+  default:
+    throw new Error(`Unrecognized command: "${command}" (${JSON.stringify(argv, null, 2)}`)
+}
