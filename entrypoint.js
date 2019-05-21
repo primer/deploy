@@ -39,17 +39,17 @@ if (argv.help) {
 const {promisify} = require('util')
 const writeFile = promisify(require('fs').writeFile)
 
-let command = argv._[0]
 const {event} = meta
+const nowArgs = argv._
 
-if (event === 'delete') {
-  command = 'delete'
-} else if (event === 'push') {
-  command = 'deploy'
-}
+let command = 'deploy'
 
-if (!command || command === '--') {
-  command = 'deploy'
+if (nowArgs[0] === '--') {
+  if (event === 'delete') {
+    command = 'delete'
+  }
+} else {
+  command = nowArgs.shift()
 }
 
 const reportError = message => {
@@ -62,7 +62,7 @@ const reportError = message => {
 
 switch (command) {
   case 'delete':
-    deleteBranch(argv, argv._)
+    deleteBranch(argv, nowArgs)
       .then(deleted => {
         if (deleted) {
           console.warn(`branch ${deleted.branch} deleted`)
@@ -74,7 +74,7 @@ switch (command) {
     break
 
   case 'deploy':
-    deploy(argv, argv._)
+    deploy(argv, nowArgs)
       .then(res => {
         // write the message to stderr...
         console.warn(`deploy completed!`)
