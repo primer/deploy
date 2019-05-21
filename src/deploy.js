@@ -26,9 +26,7 @@ module.exports = function deploy(options = {}, nowArgs = []) {
   const branch = getBranch()
 
   log(`deploying "${name}" with now...`)
-  const deployArgs = nowJson.version === 2
-    ? nowArgs
-    : verify ? nowArgs : ['--no-verify', ...nowArgs]
+  const deployArgs = nowJson.version === 2 ? nowArgs : verify ? nowArgs : ['--no-verify', ...nowArgs]
   return retry(() => now(deployArgs), retries)
     .then(url => {
       if (url) {
