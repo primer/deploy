@@ -8,7 +8,7 @@
   },
   "scripts": {
     "version": "script/version",
-    "lint": "eslint *.js src",
+    "lint": "eslint *.js src script/prune",
     "test": "jest"
   },
   "jest": {
