@@ -1,4 +1,4 @@
-workflow "lint, test, deploy" {
+workflow "lint, test, deploy, publish" {
   on = "push"
   resolves = [
     "lint",
@@ -10,23 +10,23 @@ workflow "lint, test, deploy" {
 
 action "npm install" {
   uses = "actions/npm@master"
-  runs = ["npm", "ci"]
+  runs = "npm ci"
 }
 
 action "lint" {
-  needs = ["npm install"]
+  needs = "npm install"
   uses = "actions/npm@master"
-  runs = ["npm", "run", "lint"]
+  runs = "npm run lint"
 }
 
 action "test" {
-  needs = ["npm install"]
+  needs = "npm install"
   uses = "actions/npm@master"
-  runs = ["npm", "test"]
+  runs = "npm test"
 }
 
 action "deploy" {
-  needs = ["test"]
+  needs = "test"
   uses = "./"
   secrets = [
     "GITHUB_TOKEN",
