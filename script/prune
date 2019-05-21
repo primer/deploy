@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 const dateFormat = require('dateformat')
-const Octokit = require('@octokit/rest')
+// const Octokit = require('@octokit/rest')
 const Now = require('../src/now-api')
 
 const NOW_TOKEN = requireEnv('NOW_TOKEN')
-const GITHUB_TOKEN = requireEnv('GITHUB_TOKEN')
+// const GITHUB_TOKEN = requireEnv('GITHUB_TOKEN')
 
 const FAILED_STATES = new Set(['BUILD_ERROR', 'ERROR', 'FROZEN'])
 
@@ -12,88 +12,91 @@ const REPO_URL_PREFIXES = {
   'primer-g-octicon-': {owner: 'primer', repo: 'g-octicon'}
 }
 
-const github = new Octokit({auth: `token ${GITHUB_TOKEN}`})
+// const github = new Octokit({auth: `token ${GITHUB_TOKEN}`})
 const now = new Now({token: NOW_TOKEN})
 
 console.warn(`Fetching deployments...`)
 // Get all of the deployments
-now.deployments.list().then(async deployments => {
-  console.warn(`Found ${deployments.length} deployments`)
-  // Split them into two lists: the ones that failed, and the ones that didn't
-  const [failed, remaining] = split(deployments, d => FAILED_STATES.has(d.state))
-  console.warn(`Found ${failed.length} failed deployments to remove`)
+now.deployments
+  .list()
+  .then(async deployments => {
+    console.warn(`Found ${deployments.length} deployments`)
+    // Split them into two lists: the ones that failed, and the ones that didn't
+    const [failed, remaining] = split(deployments, d => FAILED_STATES.has(d.state))
+    console.warn(`Found ${failed.length} failed deployments to remove`)
 
-  // sort by creation timestamp ascending (earliest first)
-  failed.sort((a, b) => a.created - b.created)
+    // sort by creation timestamp ascending (earliest first)
+    failed.sort((a, b) => a.created - b.created)
 
-  // Remove the failed ones
-  for (const deployment of failed) {
-    console.warn(`𐄂 removing ${deployment.url} (state: "${deployment.state}", created ${date(deployment.created)})`)
-    await now.deployments.remove({id: deployment.uid})
-      .catch(error => console.warn(`  ! Failed to remove ${deployment.uid}:`, error))
-  }
+    // Remove the failed ones
+    for (const deployment of failed) {
+      console.warn(`𐄂 removing ${deployment.url} (state: "${deployment.state}", created ${date(deployment.created)})`)
+      await now.deployments
+        .remove({id: deployment.uid})
+        .catch(error => console.warn(`  ! Failed to remove ${deployment.uid}:`, error))
+    }
 
-  // Make a mapping of deployments by UID
-  const deploymentsById = new Map()
-  const deploymentsByUrl = new Map()
-  for (const deployment of remaining) {
-    deploymentsById.set(deployment.uid, deployment)
-    deploymentsByUrl.set(deployment.url, deployment)
-    deployment.aliases = []
-  }
+    // Make a mapping of deployments by UID
+    const deploymentsById = new Map()
+    const deploymentsByUrl = new Map()
+    for (const deployment of remaining) {
+      deploymentsById.set(deployment.uid, deployment)
+      deploymentsByUrl.set(deployment.url, deployment)
+      deployment.aliases = []
+    }
 
-  console.warn(`Fetching aliases...`)
-  // Get all of the aliases
-  return now.aliases.list().then(aliases => {
-    console.warn(`Found ${aliases.length} aliases`)
-    // Associate the aliases with their respective deployments
-    for (const alias of aliases) {
-      let deployment
-      if (alias.deployment) {
-        // Aliases with a "deployment" key can be looked up by deployment UID
-        deployment = deploymentsById.get(alias.deployment.id)
-      // 
-      } else if (alias.rules) {
-        // Aliases with "rules" arrays will have a "root" URL in the last
-        // entry's "dest"
-        const destUrl = alias.rules[alias.rules.length - 1].dest
-        deployment = deploymentsByUrl.get(destUrl)
+    console.warn(`Fetching aliases...`)
+    // Get all of the aliases
+    return now.aliases.list().then(aliases => {
+      console.warn(`Found ${aliases.length} aliases`)
+      // Associate the aliases with their respective deployments
+      for (const alias of aliases) {
+        let deployment
+        if (alias.deployment) {
+          // Aliases with a "deployment" key can be looked up by deployment UID
+          deployment = deploymentsById.get(alias.deployment.id)
+          //
+        } else if (alias.rules) {
+          // Aliases with "rules" arrays will have a "root" URL in the last
+          // entry's "dest"
+          const destUrl = alias.rules[alias.rules.length - 1].dest
+          deployment = deploymentsByUrl.get(destUrl)
+        }
+        if (deployment) {
+          const aliasUrl = alias.alias
+          deployment.aliases.push(aliasUrl)
+          break
+        }
       }
-      if (deployment) {
-        const aliasUrl = alias.alias
-        deployment.aliases.push(aliasUrl)
+      return remaining
+    })
+  })
+  .then(deployments => {
+    // next, filter out deployments that are aliased to
+    const deploymentsByRepo = new Map()
+    for (const deployment of deployments) {
+      for (const alias of deployment.aliases) {
+        const context = getContextForUrl(alias)
+        if (context) {
+          const {owner, repo} = context
+          const slug = `${owner}/${repo}`
+          if (deploymentsByRepo.has(slug)) {
+            deploymentsByRepo.get(slug).push(deployment)
+          } else {
+            deploymentsByRepo.set(slug, [deployment])
+          }
+        }
         break
       }
     }
-    return remaining
-  })
-})
-.then(deployments => {
-  // next, filter out deployments that are aliased to 
-  const deploymentsByRepo = new Map()
-  for (const deployment of deployments) {
-    for (const alias of deployment.aliases) {
-      const context = getContextForUrl(alias)
-      if (context) {
-        const {owner, repo} = context
-        const slug = `${owner}/${repo}`
-        if (deploymentsByRepo.has(slug)) {
-          deploymentsByRepo.get(slug).push(deployment)
-        } else {
-          deploymentsByRepo.set(slug, [deployment])
-        }
-      }
-      break
-    }
-  }
 
-  for (const [slug, deployments] of deploymentsByRepo.entries()) {
-    console.warn(`${slug}: ${deployments.length} deployments:`)
-    for (const {url, created, aliases} of deployments) {
-      console.warn('\t', date(created), url, `aliases: ${aliases.join(', ')}`)
+    for (const [slug, deployments] of deploymentsByRepo.entries()) {
+      console.warn(`${slug}: ${deployments.length} deployments:`)
+      for (const {url, created, aliases} of deployments) {
+        console.warn('\t', date(created), url, `aliases: ${aliases.join(', ')}`)
+      }
     }
-  }
-})
+  })
 
 function getContextForUrl(url) {
   for (const prefix of Object.keys(REPO_URL_PREFIXES)) {
@@ -135,7 +138,7 @@ function split(list, test) {
   const yes = []
   const no = []
   for (const item of list) {
-    (test(item) ? yes : no).push(item)
+    ;(test(item) ? yes : no).push(item)
   }
   return [yes, no]
 }

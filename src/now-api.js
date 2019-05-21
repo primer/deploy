@@ -1,14 +1,8 @@
 const fetch = require('isomorphic-unfetch')
-const {join} = require('path')
 
 module.exports = class Now {
   constructor(options) {
-    const {
-      version = 2,
-      baseUrl = `https://api.zeit.co/v${version}/now`,
-      headers = {},
-      token
-    } = options
+    const {version = 2, baseUrl = `https://api.zeit.co/v${version}/now`, headers = {}, token} = options
     this.options = options
     this.baseUrl = baseUrl
     this.headers = headers
@@ -19,17 +13,17 @@ module.exports = class Now {
 
   get deployments() {
     return {
-      list: args => this.listDeployments(args),
-      get: args => this.getDeployment(args),
-      remove: args => this.removeDeployment(args)
+      list: (...args) => this.listDeployments(...args),
+      get: (...args) => this.getDeployment(...args),
+      remove: (...args) => this.removeDeployment(...args)
     }
   }
 
   get aliases() {
     return {
-      list: args => this.listAliases(args),
-      get: args => this.getAlias(args),
-      remove: args => this.removeAlias(args)
+      list: (...args) => this.listAliases(...args),
+      get: (...args) => this.getAlias(...args),
+      remove: (...args) => this.removeAlias(...args)
     }
   }
 
@@ -39,7 +33,7 @@ module.exports = class Now {
     return fetch(url, options).then(res => res.json())
   }
 
-  listDeployments(args) {
+  listDeployments() {
     return this.fetch('deployments').then(data => data.deployments)
   }
 
@@ -53,7 +47,7 @@ module.exports = class Now {
     return this.fetch(`deployments/${id}`, {method: 'DELETE'})
   }
 
-  listAliases(args) {
+  listAliases() {
     return this.fetch('aliases').then(data => data.aliases)
   }
 }
