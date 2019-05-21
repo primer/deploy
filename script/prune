@@ -6,7 +6,7 @@ const Now = require('../src/now-api')
 const NOW_TOKEN = requireEnv('NOW_TOKEN')
 // const GITHUB_TOKEN = requireEnv('GITHUB_TOKEN')
 
-const FAILED_STATES = new Set(['BUILD_ERROR', 'ERROR', 'FROZEN'])
+const FAILED_STATES = new Set(['BUILD_ERROR', 'ERROR' /*, 'FROZEN' */])
 
 const REPO_URL_PREFIXES = {
   'primer-g-octicon-': {owner: 'primer', repo: 'g-octicon'}
