@@ -1,7 +1,11 @@
 #!/usr/bin/env node
 const meta = require('github-action-meta')
+const {promisify} = require('util')
+const writeFile = promisify(require('fs').writeFile)
+
 const {deploy, cleanup} = require('.')
 const {DEFAULT_RETRIES} = deploy
+
 const yargs = require('yargs')
   .usage('$0 [options]')
   .option('out', {
@@ -29,15 +33,14 @@ const yargs = require('yargs')
     type: 'boolean',
     describe: 'Show this message'
   })
+
 const {argv} = yargs
+const nowArgs = argv._
 
 if (argv.help) {
   yargs.showHelp()
   process.exit(0)
 }
-
-const {promisify} = require('util')
-const writeFile = promisify(require('fs').writeFile)
 
 const {event} = meta
 const payload = event.data

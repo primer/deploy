@@ -1,6 +1,5 @@
 const meta = require('github-action-meta')
 const getAppName = require('./get-app-name')
-const getBranch = require('./get-branch')
 const getBranchAlias = require('./get-alias')
 
 module.exports = function cleanup(options = {}, nowArgs = []) {
