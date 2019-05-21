@@ -46,6 +46,10 @@ module.exports = function deploy(options = {}, nowArgs = []) {
       const {url} = res
       const prodAlias = nowJson.alias
       if (branch === releaseBranch && !rulesJson) {
+        if (!prodAlias) {
+          log(`No "alias" defined in now.json; skipping production alias.`)
+          return res
+        }
         res.url = prodAlias
         return now([...nowArgs, 'alias', url, prodAlias])
           .then(() => aliasStatus(prodAlias, config.status))
@@ -60,7 +64,7 @@ module.exports = function deploy(options = {}, nowArgs = []) {
             if (branch === releaseBranch && rulesJson) {
               const {alias} = res
               if (!prodAlias) {
-                log(`no alias field in now.json; skipping rules.json`)
+                log(`No "alias" defined in now.json; skipping rules.json`)
                 return res
               } else if (prodAlias === alias) {
                 log(`already aliased to production URL: ${alias}; skipping rules.json`)

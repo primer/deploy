@@ -130,6 +130,23 @@ describe('deploy()', () => {
     })
   })
 
+  it('does not do a production alias on master if there is no "alias" in now.json', () => {
+    mockFiles({
+      'package.json': {name: 'primer-style'},
+      'now.json': {}
+    })
+
+    const root = 'primer-style-123.now.sh'
+    mockResolve(now, root)
+    mockEnv({GITHUB_REF: 'refs/heads/master'})
+
+    return deploy().then(res => {
+      expect(now).toHaveBeenCalledTimes(1)
+      expect(now).toHaveBeenNthCalledWith(1, ['--no-verify'])
+      expect(res).toEqual({name: 'primer-style', root, url: root})
+    })
+  })
+
   it('appends arguments to the now cli call', () => {
     mockFiles({
       'package.json': {name: '@primer/css'},
