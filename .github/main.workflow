@@ -8,6 +8,11 @@ workflow "lint, test, deploy, publish" {
   ]
 }
 
+workflow "periodically prune old deployments" {
+  on = "schedule(*/15 * * * *)"
+  resolves = "prune"
+}
+
 action "npm install" {
   uses = "actions/npm@master"
   runs = "npm ci"
@@ -35,10 +40,19 @@ action "deploy" {
 }
 
 action "publish" {
-  needs = ["test"]
+  needs = "test"
   uses = "primer/publish@v1.0.0"
   secrets = [
     "GITHUB_TOKEN",
     "NPM_AUTH_TOKEN",
+  ]
+}
+
+action "prune" {
+  needs = "install"
+  runs = "script/prune"
+  secrets = [
+    "GITHUB_TOKEN",
+    "NOW_TOKEN",
   ]
 }
