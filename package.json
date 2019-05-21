@@ -27,6 +27,7 @@
     "eslint": "^5.12.1",
     "eslint-plugin-github": "^1.8.1",
     "jest": "^24.0.0",
-    "mocked-env": "^1.2.4"
+    "mocked-env": "^1.2.4",
+    "tempfile": "^3.0.0"
   }
 }
