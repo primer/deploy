@@ -1,4 +1,4 @@
 const deploy = require('./src/deploy')
-const deleteBranch = require('./src/delete-branch')
+const cleanup = require('./src/cleanup')
 
-module.exports = {deploy, deleteBranch}
+module.exports = {deploy, cleanup}

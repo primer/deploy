@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 const meta = require('github-action-meta')
-const {deploy, deleteBranch} = require('.')
+const {deploy, cleanup} = require('.')
 const {DEFAULT_RETRIES} = deploy
 const yargs = require('yargs')
-  .usage('$0 [command] [options]')
+  .usage('$0 [options]')
   .option('out', {
     alias: 'o',
     type: 'string',
@@ -40,17 +40,7 @@ const {promisify} = require('util')
 const writeFile = promisify(require('fs').writeFile)
 
 const {event} = meta
-const nowArgs = argv._
-
-let command = 'deploy'
-
-if (nowArgs[0] === '--') {
-  if (event === 'delete') {
-    command = 'delete'
-  }
-} else {
-  command = nowArgs.shift()
-}
+const payload = event.data
 
 const reportError = message => {
   return error => {
@@ -60,34 +50,33 @@ const reportError = message => {
   }
 }
 
-switch (command) {
-  case 'delete':
-    deleteBranch(argv, nowArgs)
-      .then(deleted => {
-        if (deleted) {
-          console.warn(`branch ${deleted.branch} deleted`)
-        } else {
-          console.warn(`(nothing deleted)`)
-        }
-      })
-      .catch(reportError('branch delete error'))
-    break
-
-  case 'deploy':
-    deploy(argv, nowArgs)
-      .then(res => {
-        // write the message to stderr...
-        console.warn(`deploy completed!`)
-        const data = JSON.stringify(res, null, 2)
-        if (argv.out) {
-          return writeFile(argv.out, data, 'utf8')
-        } else {
-          console.log(data)
-        }
-      })
-      .catch(reportError('deploy error'))
-    break
-
-  default:
-    throw new Error(`Unrecognized command: "${command}" (${JSON.stringify(argv, null, 2)}`)
+if (event.name === 'push' && !event.deleted) {
+  console.warn(`This looks like a push; deploying...`)
+  deploy(argv, nowArgs)
+    .then(res => {
+      // write the message to stderr...
+      console.warn(`deploy completed!`)
+      const data = JSON.stringify(res, null, 2)
+      if (argv.out) {
+        return writeFile(argv.out, data, 'utf8')
+      } else {
+        console.log(data)
+      }
+    })
+    .catch(reportError('deploy error'))
+} else if (event.name === 'delete' && payload.ref_type === 'branch') {
+  console.warn(`This looks like a branch delete; cleaning up...`)
+  cleanup(argv, nowArgs)
+    .then(deleted => {
+      if (deleted) {
+        console.warn(`branch ${deleted.branch} deleted`)
+      } else {
+        console.warn(`(nothing deleted)`)
+      }
+    })
+    .catch(reportError('branch delete error'))
+} else {
+  console.warn(`Bailing because this doesn't look like a push or branch delete:`)
+  console.warn(`GITHUB_EVENT_NAME=${event.name}; JSON payload: `, JSON.stringify(payload, null, 2))
+  process.exit(0)
 }
