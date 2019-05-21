@@ -49,7 +49,8 @@ action "publish" {
 }
 
 action "prune" {
-  needs = "install"
+  needs = "npm install"
+  uses = "actions/npm@master"
   runs = "script/prune"
   secrets = [
     "GITHUB_TOKEN",
