@@ -9,7 +9,7 @@ workflow "lint, test, deploy, publish" {
 }
 
 workflow "periodically prune old deployments" {
-  on = "schedule(*/15 * * * *)"
+  on = "schedule(0 * * * *)"
   resolves = "prune"
 }
 
