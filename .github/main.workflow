@@ -9,8 +9,8 @@ workflow "lint, test, deploy, publish" {
 }
 
 workflow "periodically prune old deployments" {
-  on = "schedule(0 * * * *)"
   resolves = "prune"
+  on = "schedule(0 */12 * * *)"
 }
 
 action "npm install" {
